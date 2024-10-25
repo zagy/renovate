@@ -27,7 +27,6 @@ import { stripEmojis } from '../../../../util/emoji';
 import { fingerprint } from '../../../../util/fingerprint';
 import { getBranchLastCommitTime } from '../../../../util/git';
 import { memoize } from '../../../../util/memoize';
-import { incLimitedValue, isLimitReached } from '../../../global/limits';
 import type {
   BranchConfig,
   BranchUpgradeConfig,
@@ -479,7 +478,7 @@ export async function ensurePr(
       try {
         if (
           !dependencyDashboardCheck &&
-          isLimitReached('PullRequests') &&
+          isPRLimitReached(config) &&
           !config.isVulnerabilityAlert
         ) {
           logger.debug('Skipping PR - limit reached');
@@ -496,7 +495,6 @@ export async function ensurePr(
           milestone: config.milestone,
         });
 
-        incLimitedValue('PullRequests');
         logger.info({ pr: pr?.number, prTitle }, 'PR created');
       } catch (err) {
         logger.debug({ err }, 'Pull request creation error');
@@ -576,4 +574,7 @@ export async function ensurePr(
     return { type: 'with-pr', pr: existingPr };
   }
   return { type: 'without-pr', prBlockedBy: 'Error' };
+}
+function isPRLimitReached(config: BranchConfig) {
+  throw new Error('Function not implemented.');
 }

@@ -7,11 +7,9 @@ import { getCache } from '../../../util/cache/repository';
 import type { BranchCache } from '../../../util/cache/repository/types';
 import { fingerprint } from '../../../util/fingerprint';
 import { setBranchNewCommit } from '../../../util/git/set-branch-commit';
-import { incLimitedValue, setMaxLimit } from '../../global/limits';
 import type { BranchConfig, UpgradeFingerprintConfig } from '../../types';
 import { processBranch } from '../update/branch';
 import { upgradeFingerprintFields } from './fingerprint-fields';
-import { getBranchesRemaining, getPrsRemaining } from './limits';
 
 export type WriteUpdateResult = 'done' | 'automerged';
 
@@ -127,15 +125,6 @@ export async function writeUpdates(
       .sort()
       .join(', ')}`,
   );
-  const prsRemaining = await getPrsRemaining(config, branches);
-  logger.debug(`Calculated maximum PRs remaining this run: ${prsRemaining}`);
-  setMaxLimit('PullRequests', prsRemaining);
-
-  const branchesRemaining = await getBranchesRemaining(config, branches);
-  logger.debug(
-    `Calculated maximum branches remaining this run: ${branchesRemaining}`,
-  );
-  setMaxLimit('Branches', branchesRemaining);
 
   for (const branch of branches) {
     const { baseBranch, branchName } = branch;
@@ -180,9 +169,6 @@ export async function writeUpdates(
     ) {
       // Stop processing other branches because base branch has been changed
       return 'automerged';
-    }
-    if (!branchExisted && (await scm.branchExists(branch.branchName))) {
-      incLimitedValue('Branches');
     }
   }
   removeMeta(['branch', 'baseBranch']);

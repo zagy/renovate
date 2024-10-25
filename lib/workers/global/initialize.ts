@@ -12,7 +12,8 @@ import { validateGitVersion } from '../../util/git';
 import * as hostRules from '../../util/host-rules';
 import { setHttpRateLimits } from '../../util/http/rate-limits';
 import { initMergeConfidence } from '../../util/merge-confidence';
-import { setMaxLimit } from './limits';
+import { setCommitLimit } from './limits';
+import is from '@sindresorhus/is';
 
 async function setDirectories(input: AllConfig): Promise<AllConfig> {
   const config: AllConfig = { ...input };
@@ -46,9 +47,10 @@ async function setDirectories(input: AllConfig): Promise<AllConfig> {
 }
 
 function limitCommitsPerRun(config: RenovateConfig): void {
-  let limit = config.prCommitsPerRunLimit;
-  limit = typeof limit === 'number' && limit > 0 ? limit : null;
-  setMaxLimit('Commits', limit);
+  const limit = is.number(config.prCommitsPerRunLimit)
+    ? config.prCommitsPerRunLimit
+    : 0;
+  setCommitLimit(limit);
 }
 
 async function checkVersions(): Promise<void> {

@@ -1,8 +1,8 @@
 import {
-  incLimitedValue,
-  isLimitReached,
+  incCommitCount,
+  isCommitLimitReached,
   resetAllLimits,
-  setMaxLimit,
+  setCommitLimit,
 } from './limits';
 
 describe('workers/global/limits', () => {
@@ -15,49 +15,42 @@ describe('workers/global/limits', () => {
   });
 
   it('increments limited value', () => {
-    setMaxLimit('Commits', 3);
+    setCommitLimit(3);
 
-    expect(isLimitReached('Commits')).toBeFalse();
+    expect(isCommitLimitReached()).toBeFalse();
 
-    incLimitedValue('Commits', 2);
-    expect(isLimitReached('Commits')).toBeFalse();
+    incCommitCount();
+    incCommitCount();
+    expect(isCommitLimitReached()).toBeFalse();
 
-    incLimitedValue('Commits');
-    expect(isLimitReached('Commits')).toBeTrue();
+    incCommitCount();
+    expect(isCommitLimitReached()).toBeTrue();
 
-    incLimitedValue('Commits');
-    expect(isLimitReached('Commits')).toBeTrue();
+    incCommitCount();
+    expect(isCommitLimitReached()).toBeTrue();
   });
 
   it('defaults to unlimited', () => {
-    expect(isLimitReached('Commits')).toBeFalse();
+    expect(isCommitLimitReached()).toBeFalse();
   });
 
   it('increments undefined', () => {
-    incLimitedValue('Commits');
-    expect(isLimitReached('Commits')).toBeFalse();
-  });
-
-  it('resets counter', () => {
-    setMaxLimit('Commits', 1);
-    incLimitedValue('Commits');
-    expect(isLimitReached('Commits')).toBeTrue();
-    setMaxLimit('Commits', 1);
-    expect(isLimitReached('Commits')).toBeFalse();
+    incCommitCount();
+    expect(isCommitLimitReached()).toBeFalse();
   });
 
   it('resets limit', () => {
-    setMaxLimit('Commits', 1);
-    incLimitedValue('Commits');
-    expect(isLimitReached('Commits')).toBeTrue();
-    setMaxLimit('Commits', null);
-    expect(isLimitReached('Commits')).toBeFalse();
+    setCommitLimit(1);
+    incCommitCount();
+    expect(isCommitLimitReached()).toBeTrue();
+    setCommitLimit(0);
+    expect(isCommitLimitReached()).toBeFalse();
   });
 
   it('sets non-positive limit as reached', () => {
-    setMaxLimit('Commits', 0);
-    expect(isLimitReached('Commits')).toBeTrue();
-    setMaxLimit('Commits', -1000);
-    expect(isLimitReached('Commits')).toBeTrue();
+    setCommitLimit(0);
+    expect(isCommitLimitReached()).toBeFalse();
+    setCommitLimit(-1000);
+    expect(isCommitLimitReached()).toBeFalse();
   });
 });

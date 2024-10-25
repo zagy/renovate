@@ -7,10 +7,9 @@ import { scm } from '../../../modules/platform/scm';
 import { ExternalHostError } from '../../../types/errors/external-host-error';
 import type { BranchConfig } from '../../types';
 
-export async function getPrHourlyRemaining(
+export async function getExistingPrsThisHour(
   config: RenovateConfig,
 ): Promise<number> {
-  if (config.prHourlyLimit) {
     try {
       logger.debug('Calculating hourly PRs remaining');
       const prList = await platform.getPrList();
@@ -21,23 +20,18 @@ export async function getPrHourlyRemaining(
           pr.sourceBranch !== config.onboardingBranch &&
           pr.sourceBranch.startsWith(config.branchPrefix!) &&
           DateTime.fromISO(pr.createdAt!) > currentHourStart,
-      );
-      const prsRemaining = Math.max(
-        0,
-        config.prHourlyLimit - soFarThisHour.length,
-      );
-      logger.debug(`PR hourly limit remaining: ${prsRemaining}`);
-      return prsRemaining;
+      ).length;
+      logger.debug(`PRs so far this hour: ${soFarThisHour}`);
+      return soFarThisHour;
     } catch (err) {
       // istanbul ignore if
       if (err instanceof ExternalHostError) {
         throw err;
       }
       logger.error({ err }, 'Error checking PRs created per hour');
-      return config.prHourlyLimit;
+      return 0;
     }
   }
-  return Number.MAX_SAFE_INTEGER;
 }
 
 export async function getConcurrentPrsRemaining(
